@@ -1,0 +1,6 @@
+@EasyHouse_HostAddress = http://localhost:5089
+
+GET {{EasyHouse_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

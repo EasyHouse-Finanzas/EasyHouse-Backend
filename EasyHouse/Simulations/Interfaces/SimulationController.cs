@@ -9,16 +9,35 @@ namespace EasyHouse.Simulations.Interfaces;
 public class SimulationController : ControllerBase
 {
     private readonly ISimulationCommandService _commandService;
+    private readonly ISimulationQueryService _queryService; 
 
-    public SimulationController(ISimulationCommandService commandService)
+    public SimulationController(
+        ISimulationCommandService commandService,
+        ISimulationQueryService queryService) 
     {
         _commandService = commandService;
+        _queryService = queryService;
     }
 
+    // POST: api/v1/simulations 
     [HttpPost]
-    public async Task<IActionResult> CreateSimulation(CreateSimulationCommand command)
+    public async Task<IActionResult> CreateSimulation([FromBody] CreateSimulationCommand command)
     {
         var result = await _commandService.Handle(command);
-        return Ok(result);
+        
+        return CreatedAtAction(nameof(GetSimulation), new { id = result.SimulationId }, result);
+    }
+
+    // GET: api/v1/simulations/{id}
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetSimulation(Guid id)
+    {
+        var simulation = await _queryService.GetDetailedSimulationByIdAsync(id);
+
+        if (simulation == null)
+        {
+            return NotFound(); 
+        }
+        return Ok(simulation); 
     }
 }

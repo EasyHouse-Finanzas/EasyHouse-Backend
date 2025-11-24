@@ -1,4 +1,5 @@
-﻿using EasyHouse.IAM.Domain.Entities;
+﻿using System.Text.Json.Serialization;
+using EasyHouse.IAM.Domain.Entities;
 
 namespace EasyHouse.Simulations.Domain.Models.Entities;
 
@@ -17,5 +18,7 @@ public class Client
     public Guid UserId { get; set; }
 
     public User User { get; set; }
+    
+    [JsonIgnore]
     public List<Simulation> Simulations { get; set; } = new();
 }

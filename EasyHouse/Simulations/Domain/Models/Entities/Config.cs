@@ -1,4 +1,6 @@
-﻿namespace EasyHouse.Simulations.Domain.Models.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace EasyHouse.Simulations.Domain.Models.Entities;
 
 public class Config
 {
@@ -21,6 +23,7 @@ public class Config
     public decimal Itf { get; set; }
     public decimal LifeInsurance { get; set; }
     public decimal RiskInsurance { get; set; }
-
+    
+    [JsonIgnore]
     public List<Simulation> Simulations { get; set; } = new();
 }

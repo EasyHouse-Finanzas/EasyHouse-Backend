@@ -141,3 +141,4 @@ C:\Users\melga\Desktop\UPC-6\Finanzas\TF\backend\EasyHouse\EasyHouse\obj\Debug\n
 C:\Users\melga\Desktop\UPC-6\Finanzas\TF\backend\EasyHouse\EasyHouse\obj\Debug\net9.0\EasyHouse.pdb
 C:\Users\melga\Desktop\UPC-6\Finanzas\TF\backend\EasyHouse\EasyHouse\obj\Debug\net9.0\EasyHouse.genruntimeconfig.cache
 C:\Users\melga\Desktop\UPC-6\Finanzas\TF\backend\EasyHouse\EasyHouse\obj\Debug\net9.0\ref\EasyHouse.dll
+C:\Users\melga\Desktop\UPC-6\Finanzas\TF\backend\EasyHouse\EasyHouse\obj\Debug\net9.0\EasyHouse.sourcelink.json

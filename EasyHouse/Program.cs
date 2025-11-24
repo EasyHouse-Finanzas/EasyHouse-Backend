@@ -7,6 +7,7 @@ using EasyHouse.IAM.Infrastructure;
 using EasyHouse.Shared.Domain.Repositories;
 using EasyHouse.Shared.Infrastructure;
 using EasyHouse.Simulations.Application;
+using EasyHouse.Simulations.Application.QueryService;
 using EasyHouse.Simulations.Domain.Models.Comands;
 using EasyHouse.Simulations.Domain.Models.Repository;
 using EasyHouse.Simulations.Domain.Models.Validators;
@@ -35,15 +36,15 @@ builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Services.AddScoped<ISimulationCommandService, SimulationCommandService>();
-builder.Services.AddScoped<IValidator<CreateSimulationCommand>, CreateSimulationCommandValidator>();
-builder.Services.AddScoped<IClientRepository, ClientRepository>();
 
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IClientCommandService, ClientCommandService>();
 builder.Services.AddScoped<IValidator<CreateClientCommand>, CreateClientCommandValidator>();
 
+builder.Services.AddScoped<ISimulationCommandService, SimulationCommandService>();
 builder.Services.AddScoped<ISimulationCalculatorService, SimulationCalculatorService>();
+builder.Services.AddScoped<ISimulationQueryService, SimulationQueryService>();
+builder.Services.AddScoped<IValidator<CreateSimulationCommand>, CreateSimulationCommandValidator>();
 
 builder.Services.AddScoped<IHouseRepository, HouseRepository>();
 builder.Services.AddScoped<IHouseCommandService, HouseCommandService>();

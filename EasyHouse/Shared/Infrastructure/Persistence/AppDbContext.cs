@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<Config> Configs { get; set; }
     public DbSet<Simulation> Simulations { get; set; }
     public DbSet<Report> Reports { get; set; }
+    public DbSet<AmortizationDetail> AmortizationDetails { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -75,5 +76,12 @@ public class AppDbContext : DbContext
             .HasOne(r => r.Simulation)
             .WithMany()
             .HasForeignKey(r => r.SimulationId);
+        
+        modelBuilder.Entity<AmortizationDetail>().ToTable("amortization_details").HasKey(a => a.Id);
+        modelBuilder.Entity<AmortizationDetail>()
+            .HasOne(a => a.Simulation)       
+            .WithMany(s => s.AmortizationSchedule) 
+            .HasForeignKey(a => a.SimulationId);
+        
     }
 }

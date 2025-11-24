@@ -1,4 +1,6 @@
-﻿namespace EasyHouse.Simulations.Domain.Models.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace EasyHouse.Simulations.Domain.Models.Entities;
 
 public class House
 {
@@ -9,6 +11,7 @@ public class House
     public decimal? BuiltArea { get; set; }
     public string Location { get; set; }
     public decimal Price { get; set; }
-
+    
+    [JsonIgnore]
     public List<Simulation> Simulations { get; set; } = new();
 }

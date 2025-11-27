@@ -16,6 +16,8 @@ public class CreateConfigCommand
     public decimal Itf { get; set; }
     public decimal LifeInsurance { get; set; }
     public decimal RiskInsurance { get; set; }
+    
+    public decimal? AnnualDiscountRate { get; set; }
 }
 
 

@@ -46,4 +46,37 @@ public class ClientCommandService : IClientCommandService
 
         return client;
     }
+    
+    public async Task<Client?> Update(Guid id, UpdateClientCommand command)
+    {
+        var client = await _repository.FindByIdAsync(id);
+        
+        if (client == null) 
+            return null; 
+        
+        client.FirstName = command.FirstName;
+        client.LastName = command.LastName;
+        client.BirthDate = command.BirthDate;
+        client.DocumentNumber = command.DocumentNumber;
+        client.Occupation = command.Occupation;
+        client.MonthlyIncome = command.MonthlyIncome;
+
+        _repository.Update(client); 
+        await _unitOfWork.CompleteAsync();
+
+        return client;
+    }
+
+    public async Task<bool> Delete(Guid id)
+    {
+        var client = await _repository.FindByIdAsync(id);
+        
+        if (client == null) 
+            return false; 
+
+        _repository.Remove(client); 
+        await _unitOfWork.CompleteAsync();
+        
+        return true;
+    }
 }

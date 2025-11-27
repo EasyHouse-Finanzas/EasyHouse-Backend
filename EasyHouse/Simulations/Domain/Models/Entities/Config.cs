@@ -24,6 +24,8 @@ public class Config
     public decimal LifeInsurance { get; set; }
     public decimal RiskInsurance { get; set; }
     
+    public decimal? AnnualDiscountRate { get; set; }
+    
     [JsonIgnore]
     public List<Simulation> Simulations { get; set; } = new();
 }

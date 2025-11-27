@@ -50,6 +50,9 @@ builder.Services.AddScoped<IHouseRepository, HouseRepository>();
 builder.Services.AddScoped<IHouseCommandService, HouseCommandService>();
 builder.Services.AddScoped<IValidator<CreateHouseCommand>, CreateHouseCommandValidator>();
 
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+builder.Services.AddScoped<IReportCommandService, ReportCommandService>();
+
 builder.Services.AddScoped<IConfigRepository, ConfigRepository>();
 builder.Services.AddScoped<IConfigCommandService, ConfigCommandService>();
 //builder.Services.AddScoped<IValidator<CreateConfigCommand>, CreateConfigCommandValidator>();

@@ -38,6 +38,7 @@ public class ConfigCommandService : IConfigCommandService
             Itf = command.Itf,
             LifeInsurance = command.LifeInsurance,
             RiskInsurance = command.RiskInsurance,
+            AnnualDiscountRate = command.AnnualDiscountRate,
         };
 
         await _repository.AddAsync(config);
@@ -65,6 +66,7 @@ public class ConfigCommandService : IConfigCommandService
         config.Itf = command.Itf;
         config.LifeInsurance = command.LifeInsurance;
         config.RiskInsurance = command.RiskInsurance;
+        config.AnnualDiscountRate = command.AnnualDiscountRate;
         _repository.Update(config);
         await _unitOfWork.CompleteAsync();
         return config;

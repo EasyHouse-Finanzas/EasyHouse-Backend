@@ -8,6 +8,6 @@ public class Report
 
     public DateTime GeneratedDate { get; set; }
     public string Format { get; set; } // PDF, Excel, CSV
-
+    public string ReportUrl { get; set; }
     public Simulation Simulation { get; set; }
 }

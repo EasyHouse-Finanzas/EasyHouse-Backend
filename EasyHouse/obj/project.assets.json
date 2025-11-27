@@ -3620,31 +3620,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\melga\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\rodri\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\melga\\Desktop\\UPC-6\\Finanzas\\TF\\backend\\EasyHouse\\EasyHouse\\EasyHouse.csproj",
+      "projectUniqueName": "C:\\Users\\rodri\\OneDrive\\Escritorio\\EasyHouse-Backend\\EasyHouse\\EasyHouse.csproj",
       "projectName": "EasyHouse",
-      "projectPath": "C:\\Users\\melga\\Desktop\\UPC-6\\Finanzas\\TF\\backend\\EasyHouse\\EasyHouse\\EasyHouse.csproj",
-      "packagesPath": "C:\\Users\\melga\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\melga\\Desktop\\UPC-6\\Finanzas\\TF\\backend\\EasyHouse\\EasyHouse\\obj\\",
+      "projectPath": "C:\\Users\\rodri\\OneDrive\\Escritorio\\EasyHouse-Backend\\EasyHouse\\EasyHouse.csproj",
+      "packagesPath": "C:\\Users\\rodri\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\rodri\\OneDrive\\Escritorio\\EasyHouse-Backend\\EasyHouse\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\melga\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\rodri\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -3663,7 +3656,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -3719,7 +3712,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

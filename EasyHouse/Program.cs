@@ -22,7 +22,15 @@ using Microsoft.OpenApi.Models;
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp",
+        policy => policy
+            .WithOrigins("http://localhost:4200") 
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+});
 // ---------------------------
 // DATABASE / CONTEXT
 // ---------------------------
@@ -133,7 +141,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAngularApp");
 // AUTH middleware must be before MapControllers
 app.UseAuthentication();
 app.UseAuthorization();

@@ -14,6 +14,8 @@ public class AmortizationDetail
     public decimal Amortization { get; set; }
     public decimal Balance { get; set; }
     
+    public DateTime PaymentDate { get; set; }
+    
     [JsonIgnore] 
     public Simulation Simulation { get; set; } = null!;
 }

@@ -12,6 +12,8 @@ public class House
     public string Location { get; set; }
     public decimal Price { get; set; }
     
+    public string Currency { get; set; }
+    
     [JsonIgnore]
     public List<Simulation> Simulations { get; set; } = new();
 }

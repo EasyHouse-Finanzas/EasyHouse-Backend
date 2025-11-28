@@ -8,4 +8,6 @@ public class CreateHouseCommand
     public decimal? AreaTechada { get; set; }
     public string Ubicacion { get; set; }
     public decimal Precio { get; set; }
+    
+    public string Currency { get; set; }
 }

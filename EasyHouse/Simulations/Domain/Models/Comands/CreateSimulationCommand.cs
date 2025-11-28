@@ -6,5 +6,6 @@ public record CreateSimulationCommand(
     Guid ConfigId,
     decimal InitialQuota,
     int TermMonths,
-    DateTime StartDate
+    DateTime StartDate,
+    decimal ExchangeRate 
 );

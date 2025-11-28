@@ -8,4 +8,6 @@ public class UpdateHouseCommand
     public decimal BuiltArea { get; set; }
     public string Location { get; set; }
     public decimal Price { get; set; }
+    
+    public string Currency { get; set; }
 }

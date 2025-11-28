@@ -36,7 +36,8 @@ public class HouseCommandService : IHouseCommandService
             TotalArea = command.AreaTotal,
             BuiltArea = command.AreaTechada,
             Location = command.Ubicacion,
-            Price = command.Precio
+            Price = command.Precio,
+            Currency = command.Currency,
         };
 
         await _repository.AddAsync(house);
@@ -56,6 +57,7 @@ public class HouseCommandService : IHouseCommandService
         house.BuiltArea = command.BuiltArea;
         house.Location = command.Location;
         house.Price = command.Price;
+        house.Currency = command.Currency;
 
         _repository.Update(house);
         await _unitOfWork.CompleteAsync();

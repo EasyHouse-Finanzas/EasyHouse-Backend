@@ -5,172 +5,213 @@ namespace EasyHouse.Simulations.Application;
 
 public class SimulationCalculatorService : ISimulationCalculatorService
 {
-    // Método auxiliar: Calcula la Tasa Efectiva Periódica (TEP/TEM)
-    // Busca hallar la tasa r (r) que se aplica a cada cuota.
+    // --- 1. CONVERSIÓN DE TASAS (Mejora de Trazabilidad) ---
+    
+    // Convierte TNA a TEA según la capitalización (Diaria o Mensual)
+    private decimal TnaToTea(decimal tna, string capitalizationFrequency)
+    {
+        // m: frecuencia de capitalización en un año comercial (360 días)
+        // Diaria = 360, Mensual = 12
+        double m = capitalizationFrequency == "Diaria" ? 360.0 : 12.0;
+        
+        // Fórmula: TEA = (1 + TNA/m)^m - 1
+        return (decimal)(Math.Pow(1 + (double)tna / m, m) - 1);
+    }
+
+    // Convierte TEA a TEM
+    private decimal TeaToTem(decimal tea)
+    {
+        // Fórmula: TEM = (1 + TEA)^(1/12) - 1
+        return (decimal)(Math.Pow(1 + (double)tea, 1.0 / 12.0) - 1);
+    }
+
     private decimal CalculateTep(Config config)
     {
-        const int periodsPerYear = 12;
-
         if (config.RateType == "Efectiva" && config.Tea.HasValue)
         {
-            // Fórmula (a) - Conversión de TEA a TEM: TEP = (1 + TEA)^(1/12) - 1
-            // Busca hallar el equivalente mensual de la tasa anual.
-            return (decimal)(Math.Pow(1 + (double)config.Tea.Value, 1.0 / periodsPerYear) - 1);
+            return TeaToTem(config.Tea.Value);
         }
-        else if (config.RateType == "Nominal" && config.Tna.HasValue && config.Capitalization == "Mensual")
+        else if (config.RateType == "Nominal" && config.Tna.HasValue)
         {
-            // Fórmula (b) - Conversión de TNA a TEM (si capitalización es mensual): TEP = TNA / 12
-            // Busca hallar el costo efectivo de la tasa nominal para el periodo de capitalización.
-            return config.Tna.Value / periodsPerYear;
+            // Trazabilidad completa: TNA -> TEA -> TEM
+            string cap = config.Capitalization ?? "Mensual";
+            decimal tea = TnaToTea(config.Tna.Value, cap);
+            return TeaToTem(tea);
         }
-
-        return 0;
+        return 0; 
     }
 
-    // --- CÁLCULO DE VAN (Valor Actual Neto) ---
-    // VAN = -P ± Σ [VF / (1+r)^n]. 'r' es la tasa mensual de descuento.
-    private decimal CalculateVan(decimal principal, List<AmortizationDetail> schedule, decimal annualDiscountRate)
+    // --- 2. CÁLCULO DE VAN (Corrección Bug r=0) ---
+    private decimal CalculateVan(decimal initialFlow, List<AmortizationDetail> schedule, decimal annualDiscountRate)
     {
-        if (annualDiscountRate <= 0 || !schedule.Any()) return -principal;
-
-        // 1. Calcular la TEM del Descuento (TEM_COK). Simula la fórmula C19 = (1+D22)^(1/12)-1
-        double r = (double)annualDiscountRate;
-        double r_monthly = Math.Pow(1 + r, 1.0 / 12.0) - 1;
-
-        decimal van = -principal;
-
-        foreach (var detail in schedule)
+        // Convertimos la COK anual a mensual
+        double r_monthly = 0;
+        
+        // Solo calculamos la tasa mensual si la anual es válida y diferente de -100%
+        if (annualDiscountRate > -1.0M)
         {
-            decimal vf = detail.Payment;
-            int n = detail.Period;
-
-            // Valor Presente: VF / (1 + r_monthly)^n
-            double presentValue = (double)vf / Math.Pow(1 + r_monthly, n);
-
-            van += (decimal)presentValue;
+            r_monthly = Math.Pow(1 + (double)annualDiscountRate, 1.0 / 12.0) - 1;
         }
 
-        return Math.Round(van, 2);
+        double van = (double)initialFlow;
+
+        foreach (var item in schedule)
+        {
+            // Si la tasa es 0, no dividimos entre potencias, es una resta simple
+            if (Math.Abs(r_monthly) < 1e-9) // r_monthly aprox 0
+            {
+                van -= (double)item.Payment;
+            }
+            else
+            {
+                van -= (double)item.Payment / Math.Pow(1 + r_monthly, item.Period);
+            }
+        }
+
+        return Math.Round((decimal)van, 2);
     }
 
-    // 0 = -P ± Σ [VF / (1+TIR)^n]
-    // --- CÁLCULO DE TIR (Tasa Interna de Retorno) ---
-    // Implementación funcional de algoritmo iterativo.
-    private decimal CalculateIrr(decimal principal, List<AmortizationDetail> schedule)
+    // --- 3. CÁLCULO DE TIR / TCEA (Mayor Robustez) ---
+    private decimal CalculateIrr(decimal initialFlow, List<AmortizationDetail> schedule)
     {
-        var cashFlows = new List<double> { (double)-principal };
-        cashFlows.AddRange(schedule.Select(d => (double)d.Payment));
+        var cashFlows = new List<double> { (double)initialFlow };
+        cashFlows.AddRange(schedule.Select(d => -(double)d.Payment));
 
-        const double tolerance = 0.00000001;
-        const int maxIterations = 100;
+        double rate = 0.01; // Semilla inicial 1%
+        const int maxIter = 100;
+        const double tol = 1e-6;
 
-        // Tasa inicial de prueba (0.00833 mensual ~ 10% anual)
-        double rate = 0.00833;
-
-        for (int i = 0; i < maxIterations; i++)
+        for (int i = 0; i < maxIter; i++)
         {
-            double npv = 0;
-            double derivative = 0;
+            double fValue = 0;
+            double fDerivative = 0;
 
             for (int t = 0; t < cashFlows.Count; t++)
             {
-                npv += cashFlows[t] / Math.Pow(1 + rate, t);
-                derivative += -t * cashFlows[t] / Math.Pow(1 + rate, t + 1);
+                double denominator = Math.Pow(1 + rate, t);
+                fValue += cashFlows[t] / denominator;
+                
+                // Derivada: -t * Flujo / (1+r)^(t+1)
+                fDerivative += -t * cashFlows[t] / (denominator * (1 + rate));
             }
 
-            // Si converge (VAN ≈ 0)
-            if (Math.Abs(npv) < tolerance)
+            // Si ya convergimos (VAN cercano a 0)
+            if (Math.Abs(fValue) < tol) break;
+
+            // Protección: Si la derivada es muy cercana a 0, detenemos para evitar NaN/Infinito
+            if (Math.Abs(fDerivative) < 1e-12) break;
+
+            double newRate = rate - fValue / fDerivative;
+
+            // Protección: Evitar tasas menores a -100% que rompen Math.Pow
+            if (newRate <= -1.0) newRate = -0.99;
+
+            if (Math.Abs(newRate - rate) < tol) 
             {
-                // Retorna la TIR anualizada
-                return (decimal)Math.Round(Math.Pow(1 + rate, 12) - 1, 4);
+                rate = newRate;
+                break;
             }
-
-            // Ajuste de la tasa para la siguiente iteración
-            rate = rate - npv / derivative;
+            rate = newRate;
         }
 
-        // Si no converge
-        return 0.00M;
+        // Convertir TIR Mensual a Anual
+        return (decimal)(Math.Pow(1 + rate, 12) - 1);
     }
 
+    // --- 4. CÁLCULO PRINCIPAL ---
     public void Calculate(Simulation simulation, House house, Config config)
     {
-        // --- PREPARACIÓN DE DATOS ---
-
-        // P: Monto de Préstamo
+        // 1. Ajuste del Capital
         decimal principal = house.Price - simulation.InitialQuota;
         if (config.HousingBonus.HasValue && config.HousingBonus.Value > 0)
         {
-            principal -= config.HousingBonus.Value;
+             principal -= config.HousingBonus.Value;
         }
-
         simulation.LoanAmount = principal;
 
-        // TEP y Costos
+        // 2. Variables de Tiempo y Tasa
         decimal tep = CalculateTep(config);
         int n = simulation.TermMonths;
+        
         decimal monthlyCost = config.MonthlyMaintenance +
                               config.MonthlyFees +
                               config.LifeInsurance +
                               config.RiskInsurance;
 
-        // --- 2. CÁLCULO DE CUOTA FIJA (C)  ---
+        // 3. Cuota Fija Base (Referencial)
         decimal cuotaSoloCapitalInteres = 0;
-        if (tep > 0 && n > 0 && principal > 0)
+        if (tep > 0 && n > 0)
         {
             double powerTerm = Math.Pow(1 + (double)tep, n);
             cuotaSoloCapitalInteres = principal * (tep * (decimal)powerTerm) / ((decimal)powerTerm - 1);
         }
         else if (n > 0)
         {
-            cuotaSoloCapitalInteres = principal / n;
+             cuotaSoloCapitalInteres = principal / n;
         }
-
         simulation.FixedQuota = Math.Round(cuotaSoloCapitalInteres + monthlyCost, 2);
-
-        // --- 3. GENERACIÓN DEL CRONOGRAMA DE PAGOS ---
-
+        
+        // 4. Generación del Cronograma
         decimal remainingBalance = principal;
         int graceMonths = config.GracePeriodType != "Ninguno" ? config.GraceMonths : 0;
-        decimal totalInterestsPaidOrCapitalized = 0;
+        decimal totalInterests = 0;
+        
         simulation.AmortizationSchedule.Clear();
 
         for (int period = 1; period <= n; period++)
         {
-            // 1. CÁLCULO DE LA FECHA DE PAGO: StartDate + N meses
-            DateTime paymentDate = simulation.StartDate.AddMonths(period);
-
             decimal interest = Math.Round(remainingBalance * tep, 2);
             decimal amortization = 0;
             decimal cuotaPeriodo = 0;
-
-            // Lógica de Gracia
+            
             if (period <= graceMonths && graceMonths > 0)
             {
-                if (config.GracePeriodType == "Parcial")
+                if (config.GracePeriodType == "Parcial") 
                 {
                     cuotaPeriodo = interest + monthlyCost;
-                    amortization = 0;
+                    amortization = 0; 
                 }
-                else if (config.GracePeriodType == "Total")
+                else if (config.GracePeriodType == "Total") 
                 {
-                    cuotaPeriodo = monthlyCost;
+                    cuotaPeriodo = monthlyCost; 
                     amortization = 0;
-                    remainingBalance += interest;
+                    remainingBalance += interest; // Capitalización
                 }
             }
-            else
+            else 
             {
-                cuotaPeriodo = simulation.FixedQuota.Value;
-                amortization = Math.Round(cuotaSoloCapitalInteres - interest, 2);
+                // Recálculo por posible cambio de saldo en gracia total
+                int remainingPeriods = n - period + 1;
+                double powerTerm = Math.Pow(1 + (double)tep, remainingPeriods);
+                
+                // Si tep es 0, evitamos división por cero en la fórmula francesa
+                decimal cuotaRecalculada = 0;
+                if (tep > 0) 
+                {
+                    cuotaRecalculada = remainingBalance * (tep * (decimal)powerTerm) / ((decimal)powerTerm - 1);
+                }
+                else
+                {
+                    cuotaRecalculada = remainingBalance / remainingPeriods;
+                }
+                
+                cuotaPeriodo = cuotaRecalculada + monthlyCost;
+                amortization = cuotaRecalculada - interest;
                 remainingBalance -= amortization;
             }
-
-            totalInterestsPaidOrCapitalized += interest;
-
-            if (period == n)
+            
+            totalInterests += interest;
+            
+            // Ajuste final de precisión
+            if (remainingBalance < 0 && remainingBalance > -5)
             {
                 amortization += remainingBalance;
+                remainingBalance = 0;
+            }
+            else if (period == n && remainingBalance > 0)
+            {
+                amortization += remainingBalance;
+                cuotaPeriodo += remainingBalance;
                 remainingBalance = 0;
             }
 
@@ -179,31 +220,28 @@ public class SimulationCalculatorService : ISimulationCalculatorService
                 Id = Guid.NewGuid(),
                 SimulationId = simulation.SimulationId,
                 Period = period,
-                PaymentDate = paymentDate, 
                 Payment = Math.Round(cuotaPeriodo, 2),
-                Interest = interest,
+                Interest = Math.Round(interest, 2),
                 Amortization = Math.Round(amortization, 2),
-                Balance = Math.Round(remainingBalance < 0 ? 0 : remainingBalance, 2)
+                Balance = Math.Round(remainingBalance, 2)
             });
         }
-
-        // --- 4. CÁLCULOS FINALES CONSOLIDADOS ---
-
-        simulation.TotalInterests = Math.Round(totalInterestsPaidOrCapitalized, 2);
-        simulation.TCEA = (decimal)(Math.Pow(1 + (double)tep, 12) - 1);
+        
+        // 5. Asignación de Resultados
+        simulation.TotalInterests = Math.Round(totalInterests, 2);
         simulation.DisbursementCommission = config.DisbursementCommission;
         simulation.InsuranceMaintenanceFees = monthlyCost;
-        simulation.TotalCreditCost =
-            simulation.TotalInterests.Value + config.DisbursementCommission + (monthlyCost * n);
+        simulation.TotalCreditCost = simulation.TotalInterests.Value + config.DisbursementCommission + (monthlyCost * n) + principal;
 
-        // VAN y TIR 
-        decimal annualCok = 0.00M;
-        if (config.AnnualDiscountRate.HasValue)
-        {
-            annualCok = config.AnnualDiscountRate.Value;
-        }
+        // Flujo Neto para TCEA = Préstamo Recibido - Comisiones Iniciales
+        decimal netProceeds = principal - config.DisbursementCommission;
 
-        simulation.VAN = CalculateVan(principal, simulation.AmortizationSchedule, annualCok);
-        simulation.AnnualIRR = CalculateIrr(principal, simulation.AmortizationSchedule);
+        // TCEA / TIR
+        simulation.TCEA = Math.Round(CalculateIrr(netProceeds, simulation.AmortizationSchedule) * 100, 2); 
+        simulation.AnnualIRR = simulation.TCEA;
+
+        // VAN
+        decimal annualCok = config.AnnualDiscountRate ?? 0;
+        simulation.VAN = Math.Round(CalculateVan(netProceeds, simulation.AmortizationSchedule, annualCok), 2);
     }
 }

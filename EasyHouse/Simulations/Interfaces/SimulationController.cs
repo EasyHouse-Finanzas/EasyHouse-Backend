@@ -40,4 +40,12 @@ public class SimulationController : ControllerBase
         }
         return Ok(simulation); 
     }
+
+    // GET: api/v1/simulations (ESTE ES EL QUE FALTABA)
+    [HttpGet]
+    public async Task<IActionResult> GetAllSimulations()
+    {
+        var simulations = await _queryService.GetAllSimulationsAsync();
+        return Ok(simulations);
+    }
 }

@@ -5,4 +5,6 @@ namespace EasyHouse.Simulations.Domain.Services;
 public interface ISimulationQueryService
 {
     Task<Simulation?> GetDetailedSimulationByIdAsync(Guid id);
+
+    Task<IEnumerable<Simulation>> GetAllSimulationsAsync();
 }

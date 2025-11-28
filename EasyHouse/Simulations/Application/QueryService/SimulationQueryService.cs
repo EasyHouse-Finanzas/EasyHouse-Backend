@@ -17,4 +17,11 @@ public class SimulationQueryService : ISimulationQueryService
     {
         return await _repository.FindDetailedByIdAsync(id);
     }
+
+
+    public async Task<IEnumerable<Simulation>> GetAllSimulationsAsync()
+    {
+
+        return await _repository.FindAllAsync();
+    }
 }

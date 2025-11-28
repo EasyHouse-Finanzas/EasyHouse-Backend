@@ -17,6 +17,18 @@ public class SimulationRepository : BaseRepository<Simulation>, ISimulationRepos
             .Include(s => s.Config)
             .FirstOrDefaultAsync(s => s.SimulationId == id);
     }
+
+
+    public async Task<IEnumerable<Simulation>> FindAllAsync()
+    {
+        return await Context.Set<Simulation>()
+
+            .Include(s => s.Client) 
+            .Include(s => s.House)
+            .Include(s => s.Config)
+            .ToListAsync();
+    }
+
     public async Task<Client?> GetClientByIdAsync(Guid id)
     {
         return await Context.Set<Client>().FirstOrDefaultAsync(c => c.ClientId == id);

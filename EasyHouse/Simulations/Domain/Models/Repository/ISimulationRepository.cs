@@ -6,6 +6,8 @@ namespace EasyHouse.Simulations.Domain.Models.Repository;
 public interface ISimulationRepository : IBaseRepository<Simulation>
 {
     Task<Simulation?> FindDetailedByIdAsync(Guid id);
+    Task<IEnumerable<Simulation>> FindAllAsync(); 
+    
     Task<House?> GetHouseByIdAsync(Guid id);
     Task<Client?> GetClientByIdAsync(Guid id);
     Task<Config?> GetConfigByIdAsync(Guid id);

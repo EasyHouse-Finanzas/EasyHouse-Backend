@@ -16,8 +16,7 @@ public class CreateSimulationCommandValidator : AbstractValidator<CreateSimulati
         RuleFor(x => x.ConfigId)
             .NotEmpty().WithMessage("ConfigId es obligatorio.");
 
-        RuleFor(x => x.InitialQuota)
-            .GreaterThan(0).WithMessage("La cuota inicial debe ser mayor a 0.");
+        RuleFor(x => x.InitialQuota).GreaterThanOrEqualTo(0).WithMessage("La cuota inicial debe ser mayor a 0.");
 
         RuleFor(x => x.TermMonths)
             .GreaterThan(0).WithMessage("El plazo debe ser mayor a 0.");

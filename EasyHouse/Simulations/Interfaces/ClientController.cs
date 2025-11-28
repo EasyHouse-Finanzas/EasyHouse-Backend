@@ -1,4 +1,5 @@
-﻿using EasyHouse.Simulations.Domain.Models.Comands;
+﻿using System.Security.Claims; // Necesario para leer el token
+using EasyHouse.Simulations.Domain.Models.Comands;
 using EasyHouse.Simulations.Domain.Models.Entities;
 using EasyHouse.Simulations.Domain.Models.Repository;
 using EasyHouse.Simulations.Domain.Services;
@@ -31,12 +32,18 @@ public class ClientController : ControllerBase
         return Ok(result);
     }
 
-    // GET: api/v1/clients
+    // GET: api/v1/clients (CORREGIDO: FILTRA POR USUARIO)
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetClients()
     {
-        var clients = await _repository.ListAsync();
+        // 1. Extraer ID del usuario
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            return Unauthorized();
+
+        // 2. Llamar al método filtrado del repositorio
+        var clients = await _repository.FindAllByUserIdAsync(userId);
         return Ok(clients);
     }
     
@@ -47,22 +54,26 @@ public class ClientController : ControllerBase
     {
         var client = await _repository.FindByIdAsync(id);
         
+        // Seguridad extra: Verificar que el cliente pertenezca al usuario
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (client != null && client.UserId.ToString() != userIdString)
+             return Forbid(); // O NotFound() para ocultarlo
+
         if (client == null) 
             return NotFound();
 
         return Ok(client);
     }
 
+    // ... (PUT y DELETE quedan igual, aunque idealmente también deberían validar el UserId) ...
+    
     // PUT (Actualizar): api/v1/clients/{id}
     [HttpPut("{id:guid}")]
     [Authorize]
     public async Task<IActionResult> UpdateClient(Guid id, [FromBody] UpdateClientCommand command)
     {
         var result = await _commandService.Update(id, command);
-        
-        if (result == null) 
-            return NotFound(); 
-            
+        if (result == null) return NotFound(); 
         return Ok(result); 
     }
 
@@ -72,10 +83,7 @@ public class ClientController : ControllerBase
     public async Task<IActionResult> DeleteClient(Guid id)
     {
         var deleted = await _commandService.Delete(id);
-
-        if (!deleted) 
-            return NotFound(); 
-
+        if (!deleted) return NotFound(); 
         return NoContent(); 
     }
 }

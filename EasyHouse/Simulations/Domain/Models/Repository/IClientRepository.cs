@@ -3,4 +3,8 @@ using EasyHouse.Simulations.Domain.Models.Entities;
 
 namespace EasyHouse.Simulations.Domain.Models.Repository;
 
-public interface IClientRepository : IBaseRepository<Client> {}
+public interface IClientRepository : IBaseRepository<Client> 
+{
+    // NUEVO MÉTODO
+    Task<IEnumerable<Client>> FindAllByUserIdAsync(Guid userId);
+}

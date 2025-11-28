@@ -5,6 +5,7 @@ namespace EasyHouse.Simulations.Domain.Services;
 public interface ISimulationQueryService
 {
     Task<Simulation?> GetDetailedSimulationByIdAsync(Guid id);
-
-    Task<IEnumerable<Simulation>> GetAllSimulationsAsync();
+    
+    // CAMBIO: Ahora pedimos el userId para filtrar
+    Task<IEnumerable<Simulation>> GetAllSimulationsByUserIdAsync(Guid userId);
 }

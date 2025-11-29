@@ -17,11 +17,8 @@ public class SimulationQueryService : ISimulationQueryService
     {
         return await _repository.FindDetailedByIdAsync(id);
     }
-
-    // CORRECCIÓN: Implementamos el método nuevo y llamamos a 'FindAllByUserIdAsync'
     public async Task<IEnumerable<Simulation>> GetAllSimulationsByUserIdAsync(Guid userId)
     {
-        // Aquí es donde conectamos con el cambio que hiciste en el Repositorio
         return await _repository.FindAllByUserIdAsync(userId);
     }
 }

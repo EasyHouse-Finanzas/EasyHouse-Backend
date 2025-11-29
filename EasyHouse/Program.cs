@@ -18,16 +18,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using EasyHouse.IAM.Infrastructure;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
         policy =>
         {
-            policy.WithOrigins("http://localhost:4200")  
+            policy.WithOrigins(
+                    "http://localhost:4200",             
+                    "https://easyhouse.netlify.app"     
+                )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials(); 
@@ -69,7 +74,7 @@ builder.Services.AddScoped<IConfigCommandService, ConfigCommandService>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-
+builder.Services.AddHttpClient<RecaptchaValidationService>();
 // ---------------------------
 // CONTROLLERS / SWAGGER
 // ---------------------------

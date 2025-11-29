@@ -7,7 +7,7 @@ public class Report
     public Guid UserId { get; set; }
 
     public DateTime GeneratedDate { get; set; }
-    public string Format { get; set; } // PDF, Excel, CSV
+    public string Format { get; set; } 
     public string ReportUrl { get; set; }
     public Simulation Simulation { get; set; }
 }

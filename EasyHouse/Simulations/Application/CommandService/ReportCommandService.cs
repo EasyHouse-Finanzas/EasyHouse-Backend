@@ -24,20 +24,13 @@ public class ReportCommandService : IReportCommandService
 
     public async Task<Report?> Generate(Guid simulationId, GenerateReportCommand command)
     {
-        // OBTENER DATOS DETALLADOS (Simulation + Cronograma)
         var simulation = await _simulationRepository.FindDetailedByIdAsync(simulationId);
 
         if (simulation == null)
             throw new Exception("Simulación no encontrada.");
-
-        // 2. GENERACIÓN DEL DOCUMENTO
-        
         
         string generatedFileName = $"Reporte_{simulation.SimulationId}_{DateTime.Now:yyyyMMddHHmmss}.{command.Format.ToLower()}";
         string reportUrl = $"https://easyhouse.cloudstorage.com/reports/{generatedFileName}";
-        
-
-        // 3. REGISTRAR EL REPORTE EN LA BASE DE DATOS
         var report = new Report
         {
             ReportId = Guid.NewGuid(),

@@ -22,7 +22,7 @@ public class SimulationCalculatorService : ISimulationCalculatorService
 
     private decimal CalculateTep(Config config)
     {
-        // 1. Sanitización de tasas (Evita errores de tipos mixtos)
+        // 1. Sanitización de tasas 
         decimal? rawTea = config.Tea;
         decimal? rawTna = config.Tna;
 

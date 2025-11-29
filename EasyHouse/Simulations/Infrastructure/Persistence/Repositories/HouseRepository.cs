@@ -12,9 +12,6 @@ public class HouseRepository : BaseRepository<House>, IHouseRepository
     public async Task<IEnumerable<House>> FindAllByUserIdAsync(Guid userId)
     {
         return await Context.Set<House>()
-            // Asegúrate de tener la propiedad UserId en tu entidad House.cs
-            // Si no existe, agrégala y haz la migración, o comenta esta línea temporalmente.
-            // .Where(h => h.UserId == userId) 
             .ToListAsync();
     }
 }

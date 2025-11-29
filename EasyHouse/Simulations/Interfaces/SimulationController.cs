@@ -41,19 +41,16 @@ public class SimulationController : ControllerBase
         return Ok(simulation); 
     }
 
-    // GET: api/v1/simulations (ESTE ES EL QUE FALTABA)
+    // GET: api/v1/simulations 
     [HttpGet]
     public async Task<IActionResult> GetAllSimulations()
     {
-        // 1. Extraer ID del token
         var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
         {
             return Unauthorized();
         }
-
-        // 2. Llamar al nuevo método del servicio pasando el ID
         var simulations = await _queryService.GetAllSimulationsByUserIdAsync(userId);
         
         return Ok(simulations);

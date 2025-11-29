@@ -1,4 +1,4 @@
-﻿using System.Security.Claims; // Importante
+﻿using System.Security.Claims; 
 using EasyHouse.Simulations.Domain.Models.Comands;
 using EasyHouse.Simulations.Domain.Models.Entities;
 using EasyHouse.Simulations.Domain.Models.Repository;
@@ -31,7 +31,7 @@ public class HouseController : ControllerBase
         return Ok(result);
     }
     
-    // GET: api/v1/houses (CORREGIDO)
+    // GET: api/v1/houses 
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetHouses()
@@ -39,8 +39,6 @@ public class HouseController : ControllerBase
         var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
             return Unauthorized();
-
-        // Llamamos al método filtrado
         var houses = await _repository.FindAllByUserIdAsync(userId);
         return Ok(houses);
     }
@@ -51,8 +49,6 @@ public class HouseController : ControllerBase
     public async Task<IActionResult> GetHouse(Guid id)
     {
         var house = await _repository.FindByIdAsync(id);
-        
-        // Validación de propiedad
         var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (house != null && house.UserId.ToString() != userIdString)
              return Forbid();

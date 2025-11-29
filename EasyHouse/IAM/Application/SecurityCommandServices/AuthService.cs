@@ -5,6 +5,7 @@ using EasyHouse.IAM.Domain.Results;
 using EasyHouse.IAM.Domain.Services;
 using EasyHouse.Shared.Domain.Repositories;
 using Microsoft.AspNetCore.Identity;
+using EasyHouse.IAM.Infrastructure;
 
 namespace EasyHouse.IAM.Application.SecurityCommandServices;
 
@@ -13,12 +14,18 @@ public class AuthService : IAuthService
     private readonly IUserRepository _users;
     private readonly ITokenService _token;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly RecaptchaValidationService _recaptchaService;
 
-    public AuthService(IUserRepository users, ITokenService token, IUnitOfWork unitOfWork)
+    public AuthService(
+        IUserRepository users, 
+        ITokenService token, 
+        IUnitOfWork unitOfWork,
+        RecaptchaValidationService recaptchaService) 
     {
         _users = users;
         _token = token;
         _unitOfWork = unitOfWork;
+        _recaptchaService = recaptchaService; 
     }
 
     public async Task<User> SignUpAsync(SignUpCommand command)
@@ -49,6 +56,12 @@ public class AuthService : IAuthService
 
     public async Task<AuthResult> SignInAsync(SignInCommand command)
     {
+        var captchaValido = await _recaptchaService.ValidateTokenAsync(command.RecaptchaToken);
+        if (!captchaValido)
+        {
+            throw new Exception("Captcha inválido o expirado. Por favor recarga la página.");
+        }
+        
         var user = await _users.FindByEmailAsync(command.Email);
         if (user == null)
             throw new Exception("Usuario no encontrado.");

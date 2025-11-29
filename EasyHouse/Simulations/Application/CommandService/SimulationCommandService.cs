@@ -13,8 +13,6 @@ public class SimulationCommandService : ISimulationCommandService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<CreateSimulationCommand> _validator;
     private readonly ISimulationCalculatorService _calculator;
-    // Asumo que el ExchangeRateService fue omitido y la tasa viene en el command.
-    // private readonly IExchangeRateService _exchangeRateService; 
 
     public SimulationCommandService(
         ISimulationRepository repository,
@@ -27,7 +25,6 @@ public class SimulationCommandService : ISimulationCommandService
         _unitOfWork = unitOfWork;
         _validator = validator;
         _calculator = calculator;
-        // _exchangeRateService = exchangeRateService;
     }
 
     public async Task<Simulation?> Handle(CreateSimulationCommand command)
@@ -42,14 +39,9 @@ public class SimulationCommandService : ISimulationCommandService
 
         if (client == null || house == null || config == null)
             throw new Exception("Cliente, Casa o Config no encontrados.");
-
-        // --- 1. LÓGICA DE CONVERSIÓN DE MONEDA ---
         decimal finalHousePrice = house.Price;
-        
-        // Si la moneda de la casa (origen) es diferente a la moneda de la config (destino)
         if (house.Currency != config.Currency && command.ExchangeRate > 0) 
         {
-            // Se realiza la conversión: Precio Final = Precio Original * Tasa de Cambio (T)
             finalHousePrice = house.Price * command.ExchangeRate;
         }
         

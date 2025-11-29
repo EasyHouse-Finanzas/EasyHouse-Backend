@@ -17,15 +17,13 @@ public class SimulationRepository : BaseRepository<Simulation>, ISimulationRepos
             .Include(s => s.Config)
             .FirstOrDefaultAsync(s => s.SimulationId == id);
     }
-
-    // IMPLEMENTACIÓN DEL FILTRO:
+    
     public async Task<IEnumerable<Simulation>> FindAllByUserIdAsync(Guid userId)
     {
         return await Context.Set<Simulation>()
             .Include(s => s.Client) 
             .Include(s => s.House)
             .Include(s => s.Config)
-            // Filtramos usando el UserId del Cliente asociado a la simulación
             .Where(s => s.Client.UserId == userId) 
             .ToListAsync();
     }

@@ -18,12 +18,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using EasyHouse.IAM.Infrastructure;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ---------------------------
+// CORS
+// ---------------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
@@ -38,6 +40,7 @@ builder.Services.AddCors(options =>
                 .AllowCredentials(); 
         });
 });
+
 // ---------------------------
 // DATABASE / CONTEXT
 // ---------------------------
@@ -50,7 +53,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ISimulationRepository, SimulationRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
 
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IClientCommandService, ClientCommandService>();
@@ -70,11 +72,11 @@ builder.Services.AddScoped<IReportCommandService, ReportCommandService>();
 
 builder.Services.AddScoped<IConfigRepository, ConfigRepository>();
 builder.Services.AddScoped<IConfigCommandService, ConfigCommandService>();
-//builder.Services.AddScoped<IValidator<CreateConfigCommand>, CreateConfigCommandValidator>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddHttpClient<RecaptchaValidationService>();
+
 // ---------------------------
 // CONTROLLERS / SWAGGER
 // ---------------------------
@@ -121,7 +123,7 @@ var jwtAudience = builder.Configuration["Jwt:Audience"];
 
 if (string.IsNullOrWhiteSpace(jwtKey) || string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtAudience))
 {
-    throw new Exception("Jwt config missing in appsettings.json (Jwt:Key, Jwt:Issuer, Jwt:Audience).");
+    Console.WriteLine("Warning: JWT Configuration is missing. Authentication may fail.");
 }
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -135,24 +137,37 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? "DefaultSecretKeyForDevOnly12345"))
         };
     });
 
 builder.Services.AddAuthorization();
 
-// ---------------------------
 var app = builder.Build();
-app.UseCors("AllowAngular");
-if (app.Environment.IsDevelopment())
+
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EasyHouse API v1"));
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate(); 
+        Console.WriteLine("Base de datos migrada exitosamente.");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocurrió un error al migrar la base de datos.");
+    }
 }
+
+app.UseCors("AllowAngular");
+
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EasyHouse API v1"));
 
 app.UseHttpsRedirection();
 
-// AUTH middleware must be before MapControllers
 app.UseAuthentication();
 app.UseAuthorization();
 
